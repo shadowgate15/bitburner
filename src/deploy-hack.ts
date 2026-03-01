@@ -13,9 +13,9 @@ export async function main(ns: NS) {
 
     if (threadCount <= 0) {
       ns.tprint(
-        `Not enough RAM to deploy hack.js to ${server} (requires ${SCRIPT_RAM} GB, has ${ns.getServerMaxRam(
-          server,
-        )} GB)`,
+        `Not enough RAM to deploy hack.js to ${server} (requires ${ns.formatRam(
+          SCRIPT_RAM as number,
+        )}, has ${ns.formatRam(ns.getServerMaxRam(server))})`,
       );
       continue;
     }
@@ -25,6 +25,7 @@ export async function main(ns: NS) {
     ns.scp('hack.js', server);
 
     ns.brutessh(server);
+    ns.ftpcrack(server);
     ns.nuke(server);
 
     ns.kill('hack.js', server);
@@ -37,6 +38,7 @@ let SCRIPT_RAM: number | null = null;
 function getThreadCount(ns: NS, server: string): number {
   if (!SCRIPT_RAM) {
     SCRIPT_RAM = ns.getScriptRam('hack.js');
+    ns.tprint(`hack.js requires ${ns.formatRam(SCRIPT_RAM)} of RAM`);
   }
 
   const maxRam = ns.getServerMaxRam(server);

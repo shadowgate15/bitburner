@@ -1,11 +1,11 @@
 import { NS } from '@ns';
 
 export async function main(ns: NS) {
-  if (!ns.args[0]) {
+  const target = ns.args[0];
+
+  if (!target || typeof target !== 'string') {
     throw new Error('Please provide a target server as an argument');
   }
-
-  const target = ns.args[0];
 
   // Defines how much money a server should have before we hack it
   // In this case, it is set to the maximum amount of money.
@@ -15,15 +15,6 @@ export async function main(ns: NS) {
   // have. If the target's security level is higher than this,
   // we'll weaken it before doing anything else
   const securityThresh = ns.getServerMinSecurityLevel(target);
-
-  // If we have the BruteSSH.exe program, use it to open the SSH Port
-  // on the target server
-  if (ns.fileExists('BruteSSH.exe', 'home')) {
-    ns.brutessh(target);
-  }
-
-  // Get root access to target server
-  ns.nuke(target);
 
   // Infinite loop that continously hacks/grows/weakens the target server
   while (true) {
