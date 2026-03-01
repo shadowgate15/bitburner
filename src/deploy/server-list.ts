@@ -48,6 +48,6 @@ export class ServerList {
   }
 
   shouldIncludeServer(host: string): boolean {
-    return this.servers.has(host) || this.ns.getServerNumPortsRequired(host) <= PORTS_REQUIRED_THRESHOLD;
+    return !this.servers.has(host) && this.ns.getServerNumPortsRequired(host) <= PORTS_REQUIRED_THRESHOLD;
   }
 }
