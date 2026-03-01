@@ -1,44 +1,47 @@
 import { NS } from '@ns';
 import { getTargetServer } from './deploy/get-target-server';
+import { nuke } from './deploy/nuke';
 import { ServerList } from './deploy/server-list';
+
+const SCRIPT_NAME = 'hack.js';
 
 export async function main(ns: NS) {
   const servers = ServerList.get(ns);
-  const targetServer = await getTargetServer(ns, servers);
+  const targetServer = getTargetServer(ns, servers);
 
-  ns.tprint(`Deploying "hack.js" targeting: "${targetServer}" to ${servers.length} servers: ${servers.join(', ')}`);
+  ns.tprint(
+    `Deploying "${SCRIPT_NAME}" targeting: "${targetServer}" to ${servers.length} servers: ${servers.join(', ')}`,
+  );
 
   for (const server of servers) {
     const threadCount = getThreadCount(ns, server);
 
     if (threadCount <= 0) {
       ns.tprint(
-        `Not enough RAM to deploy hack.js to ${server} (requires ${ns.formatRam(
+        `Not enough RAM to deploy ${SCRIPT_NAME} to ${server} (requires ${ns.formatRam(
           SCRIPT_RAM as number,
         )}, has ${ns.formatRam(ns.getServerMaxRam(server))})`,
       );
       continue;
     }
 
-    ns.tprint(`Deploying hack.js to ${server} with ${threadCount} threads...`);
+    ns.tprint(`Deploying ${SCRIPT_NAME} to ${server} with ${threadCount} threads...`);
 
-    ns.scp('hack.js', server);
+    ns.scp(SCRIPT_NAME, server);
 
-    ns.brutessh(server);
-    ns.ftpcrack(server);
-    ns.nuke(server);
+    nuke(ns, server);
 
-    ns.kill('hack.js', server);
-    ns.exec('hack.js', server, threadCount, targetServer);
-    ns.tprint(`Deployed hack.js to ${server} with ${threadCount} threads!`);
+    ns.kill(SCRIPT_NAME, server, targetServer);
+    ns.exec(SCRIPT_NAME, server, threadCount, targetServer);
+    ns.tprint(`Deployed ${SCRIPT_NAME} to ${server} with ${threadCount} threads!`);
   }
 }
 
 let SCRIPT_RAM: number | null = null;
 function getThreadCount(ns: NS, server: string): number {
   if (!SCRIPT_RAM) {
-    SCRIPT_RAM = ns.getScriptRam('hack.js');
-    ns.tprint(`hack.js requires ${ns.formatRam(SCRIPT_RAM)} of RAM`);
+    SCRIPT_RAM = ns.getScriptRam(SCRIPT_NAME);
+    ns.tprint(`${SCRIPT_NAME} requires ${ns.formatRam(SCRIPT_RAM)} of RAM`);
   }
 
   const maxRam = ns.getServerMaxRam(server);

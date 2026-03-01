@@ -1,5 +1,5 @@
 import { NS } from '@ns';
-import { PORTS_REQUIRED_THRESHOLD } from './constants';
+import { getPortsThreshold } from './get-ports-threshold';
 
 /**
  * This class is responsible for generating a list of servers that we can hack, based on the number of ports required to hack them.
@@ -48,6 +48,6 @@ export class ServerList {
   }
 
   shouldIncludeServer(host: string): boolean {
-    return !this.servers.has(host) && this.ns.getServerNumPortsRequired(host) <= PORTS_REQUIRED_THRESHOLD;
+    return !this.servers.has(host) && this.ns.getServerNumPortsRequired(host) <= getPortsThreshold(this.ns);
   }
 }
