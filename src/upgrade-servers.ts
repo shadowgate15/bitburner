@@ -27,8 +27,6 @@ export async function main(ns: NS) {
     // Upgreade the server to the new RAM amount
     if (ns.upgradePurchasedServer(server, ram)) {
       ns.print(`Upgraded ${server} to ${ns.formatRam(ram)}`);
-      // Re-deploy our hack script to the upgraded server
-      ns.exec('deploy-hack.js', 'home');
     }
   }
 
