@@ -15,33 +15,33 @@ export async function main(ns: NS) {
 }
 
 class App {
-  servers: string[];
+  private servers: string[];
 
-  readonly weakenScriptSize: number;
-  readonly growScriptSize: number;
-  readonly hackScriptSize: number;
+  private readonly weakenScriptSize: number;
+  private readonly growScriptSize: number;
+  private readonly hackScriptSize: number;
 
-  get maxMoney() {
+  private get maxMoney() {
     return this.ns.getServerMaxMoney(this.target);
   }
 
-  get availableMoney() {
+  private get availableMoney() {
     return this.ns.getServerMoneyAvailable(this.target);
   }
 
-  get moneyThreshold() {
+  private get moneyThreshold() {
     return this.maxMoney * 0.1;
   }
 
-  get isMaxSecurityLevel() {
+  private get isMaxSecurityLevel() {
     return this.ns.getServerSecurityLevel(this.target) <= this.ns.getServerMinSecurityLevel(this.target);
   }
 
-  get isMaxMoney() {
+  private get isMaxMoney() {
     return this.ns.getServerMoneyAvailable(this.target) >= this.ns.getServerMaxMoney(this.target);
   }
 
-  get numOfWeakenThreadsNeeded() {
+  private get numOfWeakenThreadsNeeded() {
     const minSecurityLevel = this.ns.getServerMinSecurityLevel(this.target);
 
     let i = 1;
@@ -53,7 +53,7 @@ class App {
     return i;
   }
 
-  get numOfGrowThreadsNeeded() {
+  private get numOfGrowThreadsNeeded() {
     if (!this.isMaxSecurityLevel) {
       return 0;
     }
@@ -67,7 +67,7 @@ class App {
     return Math.ceil(this.ns.growthAnalyze(this.target, growthFactor));
   }
 
-  get numOfHackThreadsNeeded() {
+  private get numOfHackThreadsNeeded() {
     if (!this.isMaxSecurityLevel || !this.isMaxMoney) {
       return 0;
     }
@@ -75,19 +75,19 @@ class App {
     return Math.floor(this.ns.hackAnalyzeThreads(this.target, this.moneyThreshold));
   }
 
-  get totalAvailableThreads() {
+  private get totalAvailableThreads() {
     const maxRam = Math.max(this.weakenScriptSize, this.growScriptSize, this.hackScriptSize);
 
     let totalAvailableThreads = 0;
 
     for (const server of this.servers) {
-      totalAvailableThreads += Math.floor(this.ns.getServerMaxRam(server) / maxRam);
+      totalAvailableThreads += Math.floor(this.getServerMaxRam(server) / maxRam);
     }
 
     return totalAvailableThreads;
   }
 
-  get totalUsedThreads() {
+  private get totalUsedThreads() {
     let totalUsedThreads = 0;
 
     for (const server of this.servers) {
@@ -99,8 +99,16 @@ class App {
     return totalUsedThreads;
   }
 
+  private get includeHomeServer() {
+    return this.ns.flags([['home', false]])['home'] as boolean;
+  }
+
   constructor(private readonly ns: NS, private readonly target: string) {
     this.servers = ServerList.get(this.ns);
+
+    if (this.includeHomeServer) {
+      this.servers.push('home');
+    }
 
     // Setup: Copy scripts and nuke servers
     for (const server of this.servers) {
@@ -137,7 +145,7 @@ class App {
     }
   }
 
-  calculateCurrentThreads() {
+  private calculateCurrentThreads() {
     let weakenThreads = 0;
     let growThreads = 0;
     let hackThreads = 0;
@@ -155,15 +163,25 @@ class App {
     };
   }
 
-  getAvailableServerRam(server: string) {
-    return this.ns.getServerMaxRam(server) - this.ns.getServerUsedRam(server);
+  private getServerMaxRam(server: string) {
+    let ret = this.ns.getServerMaxRam(server);
+
+    if (server === 'home') {
+      ret -= 512; // Reserve some RAM for the home server to avoid issues
+    }
+
+    return ret;
   }
 
-  possibleThreadsForScript(server: string, scriptSize: number) {
+  private getAvailableServerRam(server: string) {
+    return this.getServerMaxRam(server) - this.ns.getServerUsedRam(server);
+  }
+
+  private possibleThreadsForScript(server: string, scriptSize: number) {
     return Math.floor(this.getAvailableServerRam(server) / scriptSize);
   }
 
-  addWeakenThread(threadsNeeded: number) {
+  private addWeakenThread(threadsNeeded: number) {
     let threadsToAdd = Math.ceil(threadsNeeded);
 
     for (const server of this.servers) {
@@ -186,7 +204,7 @@ class App {
     }
   }
 
-  addGrowThread(threadsNeeded: number) {
+  private addGrowThread(threadsNeeded: number) {
     let threadsToAdd = Math.ceil(threadsNeeded);
 
     for (const server of this.servers) {
@@ -206,7 +224,7 @@ class App {
     }
   }
 
-  addHackThread(threadsNeeded: number) {
+  private addHackThread(threadsNeeded: number) {
     let threadsToAdd = Math.ceil(threadsNeeded);
 
     for (const server of this.servers) {
