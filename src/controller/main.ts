@@ -30,19 +30,49 @@ class App {
   }
 
   get moneyThreshold() {
-    return this.maxMoney * 0.9;
+    return this.maxMoney * 0.1;
+  }
+
+  get isMaxSecurityLevel() {
+    return this.ns.getServerSecurityLevel(this.target) <= this.ns.getServerMinSecurityLevel(this.target);
+  }
+
+  get isMaxMoney() {
+    return this.ns.getServerMoneyAvailable(this.target) >= this.ns.getServerMaxMoney(this.target);
   }
 
   get numOfWeakenThreadsNeeded() {
     const minSecurityLevel = this.ns.getServerMinSecurityLevel(this.target);
 
-    let i = 0;
+    let i = 1;
 
-    while (this.ns.getServerSecurityLevel(this.target) - this.ns.weakenAnalyze(i) < minSecurityLevel) {
+    while (this.ns.getServerSecurityLevel(this.target) - this.ns.weakenAnalyze(i) > minSecurityLevel) {
       i++;
     }
 
     return i;
+  }
+
+  get numOfGrowThreadsNeeded() {
+    if (!this.isMaxSecurityLevel) {
+      return 0;
+    }
+
+    let growthFactor = this.maxMoney / this.availableMoney;
+
+    if (growthFactor === Infinity) {
+      growthFactor = this.maxMoney;
+    }
+
+    return Math.ceil(this.ns.growthAnalyze(this.target, growthFactor));
+  }
+
+  get numOfHackThreadsNeeded() {
+    if (!this.isMaxSecurityLevel || !this.isMaxMoney) {
+      return 0;
+    }
+
+    return Math.floor(this.ns.hackAnalyzeThreads(this.target, this.moneyThreshold));
   }
 
   get totalAvailableThreads() {
@@ -88,13 +118,11 @@ class App {
 
   async run() {
     while (true) {
-      const optimalRatio = this.calculateOptimalRatios();
-      const correctThreads = this.calculateCorrectThreads(optimalRatio);
-      const currentRatio = this.calculateCurrentThreads();
+      const currentThreads = this.calculateCurrentThreads();
 
-      const neededWeakenThreads = correctThreads.weaken - currentRatio.weaken;
-      const neededGrowThreads = correctThreads.grow - currentRatio.grow;
-      const neededHackThreads = correctThreads.hack - currentRatio.hack;
+      const neededWeakenThreads = this.numOfWeakenThreadsNeeded - currentThreads.weaken;
+      const neededGrowThreads = this.numOfGrowThreadsNeeded - currentThreads.grow;
+      const neededHackThreads = this.numOfHackThreadsNeeded - currentThreads.hack;
 
       this.ns.print(
         `Threads needed - Weaken: ${neededWeakenThreads}, Grow: ${neededGrowThreads}, Hack: ${neededHackThreads}`,
@@ -107,20 +135,6 @@ class App {
 
       await this.ns.sleep(1000);
     }
-  }
-
-  calculateOptimalRatios() {
-    const weakenThreadsNeeded = this.numOfWeakenThreadsNeeded;
-    const growThreadsNeeded = Math.ceil(this.ns.growthAnalyze(this.target, this.maxMoney / this.availableMoney));
-    const hackThreadsNeeded = Math.floor(this.ns.hackAnalyzeThreads(this.target, this.moneyThreshold));
-
-    const totalThreads = weakenThreadsNeeded + growThreadsNeeded + hackThreadsNeeded;
-
-    return {
-      weaken: weakenThreadsNeeded / totalThreads,
-      grow: growThreadsNeeded / totalThreads,
-      hack: hackThreadsNeeded / totalThreads,
-    };
   }
 
   calculateCurrentThreads() {
@@ -138,14 +152,6 @@ class App {
       weaken: weakenThreads,
       grow: growThreads,
       hack: hackThreads,
-    };
-  }
-
-  calculateCorrectThreads(optimalRatios: { weaken: number; grow: number; hack: number }) {
-    return {
-      weaken: Math.floor(optimalRatios.weaken * this.totalAvailableThreads),
-      grow: Math.floor(optimalRatios.grow * this.totalAvailableThreads),
-      hack: Math.floor(optimalRatios.hack * this.totalAvailableThreads),
     };
   }
 
