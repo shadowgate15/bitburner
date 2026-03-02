@@ -1,6 +1,8 @@
 import { NS } from '@ns';
 
 export async function main(ns: NS) {
+  ns.disableLog('ALL');
+
   // exponentiall factor to upgrade servers to
   const factor = ns.args[0];
 
@@ -24,6 +26,7 @@ export async function main(ns: NS) {
 
     // Upgreade the server to the new RAM amount
     if (ns.upgradePurchasedServer(server, ram)) {
+      ns.print(`Upgraded ${server} to ${ns.formatRam(ram)}`);
       // Re-deploy our hack script to the upgraded server
       ns.exec('deploy-hack.js', 'home');
     }

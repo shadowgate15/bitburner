@@ -17,15 +17,15 @@ export async function main(ns: NS) {
     const threadCount = getThreadCount(ns, server);
 
     if (threadCount <= 0) {
-      ns.tprint(
-        `Not enough RAM to deploy ${SCRIPT_NAME} to ${server} (requires ${ns.formatRam(
+      ns.print(
+        `WARN: Not enough RAM to deploy ${SCRIPT_NAME} to ${server} (requires ${ns.formatRam(
           SCRIPT_RAM as number,
         )}, has ${ns.formatRam(ns.getServerMaxRam(server))})`,
       );
       continue;
     }
 
-    ns.tprint(`Deploying ${SCRIPT_NAME} to ${server} with ${threadCount} threads...`);
+    ns.print(`Deploying ${SCRIPT_NAME} to ${server} with ${threadCount} threads...`);
 
     ns.scp(SCRIPT_NAME, server);
 
@@ -33,7 +33,7 @@ export async function main(ns: NS) {
 
     ns.kill(SCRIPT_NAME, server, targetServer);
     ns.exec(SCRIPT_NAME, server, threadCount, targetServer);
-    ns.tprint(`Deployed ${SCRIPT_NAME} to ${server} with ${threadCount} threads!`);
+    ns.print(`Deployed ${SCRIPT_NAME} to ${server} with ${threadCount} threads!`);
   }
 }
 
@@ -41,7 +41,7 @@ let SCRIPT_RAM: number | null = null;
 function getThreadCount(ns: NS, server: string): number {
   if (!SCRIPT_RAM) {
     SCRIPT_RAM = ns.getScriptRam(SCRIPT_NAME);
-    ns.tprint(`${SCRIPT_NAME} requires ${ns.formatRam(SCRIPT_RAM)} of RAM`);
+    ns.print(`INFO: ${SCRIPT_NAME} requires ${ns.formatRam(SCRIPT_RAM)} of RAM`);
   }
 
   const maxRam = ns.getServerMaxRam(server);
