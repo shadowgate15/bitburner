@@ -18,6 +18,7 @@ export async function main(ns: NS) {
   ns.tprint(`maxMoney: ${ns.getServerMaxMoney(target)}`);
   ns.tprint(`currentMoney: ${ns.getServerMoneyAvailable(target)}`);
   ns.tprint(`Preparation completed for ${target}. Starting batch execution...`);
+  ns.print(`Preparation completed for ${target}. Starting batch execution...`);
 
   while (true) {
     await runBatch(ns, target);

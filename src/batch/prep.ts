@@ -35,13 +35,14 @@ export async function prep(ns: NS, target: string) {
 
       return i;
     })();
+    const weakenThreads = weakenThreadsForGrow + weakenThreadsForCatchup;
 
     const growPortNumber = Date.now();
     const weakenPortNumber = Date.now() + 1;
 
     try {
       threadCoordinator.addGrowThreads(target, growThreads, 0, growPortNumber);
-      threadCoordinator.addWeakenThreads(target, weakenThreadsForGrow + weakenThreadsForCatchup, 0, weakenPortNumber);
+      threadCoordinator.addWeakenThreads(target, weakenThreads, 0, weakenPortNumber);
     } catch (e) {
       if (!(e instanceof NotEnoughRamError)) {
         throw e;
@@ -50,13 +51,13 @@ export async function prep(ns: NS, target: string) {
 
     await Promise.all([
       (async () => {
-        while (ns.peek(growPortNumber) !== 'grow') {
-          await ns.asleep(100);
+        if (growThreads > 0) {
+          await ns.nextPortWrite(growPortNumber);
         }
       })(),
       (async () => {
-        while (ns.peek(weakenPortNumber) !== 'weaken') {
-          await ns.asleep(100);
+        if (weakenThreads > 0) {
+          await ns.nextPortWrite(weakenPortNumber);
         }
       })(),
     ]);

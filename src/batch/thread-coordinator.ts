@@ -33,7 +33,7 @@ export class ThreadCoordinator {
 
     const threadsToAdd = Math.min(
       threads,
-      Math.ceil((this.ns.getServerMaxRam(server) - this.ns.getServerUsedRam(server)) / scriptRam),
+      Math.floor((this.ns.getServerMaxRam(server) - this.ns.getServerUsedRam(server)) / scriptRam),
     );
 
     this.ns.scp(script, server);
