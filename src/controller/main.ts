@@ -5,13 +5,7 @@ import { NS } from '@ns';
 export async function main(ns: NS) {
   ns.disableLog('ALL');
 
-  const target = ns.args[0];
-
-  if (!target || typeof target !== 'string') {
-    throw new Error('Please provide a target server as an argument');
-  }
-
-  await new App(ns, target).run();
+  await new App(ns).run();
 }
 
 class App {
@@ -99,11 +93,29 @@ class App {
     return totalUsedThreads;
   }
 
-  private get includeHomeServer() {
-    return this.ns.flags([['home', false]])['home'] as boolean;
+  private get flags() {
+    return this.ns.flags([
+      ['home', false],
+      ['target', ''],
+    ]);
   }
 
-  constructor(private readonly ns: NS, private readonly target: string) {
+  private get includeHomeServer() {
+    return this.flags['home'] as boolean;
+  }
+
+  private get target() {
+    const target = this.flags['target'];
+
+    if (!target || typeof target !== 'string' || target.trim() === '') {
+      throw new Error('Please provide a target server using --target argument');
+    }
+
+    return target.trim();
+  }
+
+  constructor(private readonly ns: NS) {
+    this.target; // Validate target early
     this.servers = ServerList.get(this.ns);
 
     if (this.includeHomeServer) {
