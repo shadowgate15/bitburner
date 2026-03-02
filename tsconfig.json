@@ -5,6 +5,7 @@
     "lib": ["esnext", "dom"],
     "types": ["vite/client"],
     "strict": true,
+    "jsx": "react",
     "allowJs": true,
     "noEmit": true,
     "isolatedModules": true,
@@ -26,6 +27,7 @@
     "src/**/*.js",
     "NetscriptDefinitions.d.ts",
     "vite.config.ts",
-    "vite.config.js"
+    "vite.config.js",
+    "global.d.ts"
   ]
 }
