@@ -13,8 +13,12 @@ export function getTargetServer(ns: NS, servers: string[]): string {
       return ns.getServerRequiredHackingLevel(s) <= hackingLevel;
     })
     .sort((a, b) => {
-      return ns.getServerMaxMoney(b) - ns.getServerMaxMoney(a);
+      return scoreServer(ns, b) - scoreServer(ns, a);
     });
 
   return orderedServers[0];
+}
+
+function scoreServer(ns: NS, server: string): number {
+  return ns.getServerMaxMoney(server) / ns.getServerMinSecurityLevel(server);
 }
