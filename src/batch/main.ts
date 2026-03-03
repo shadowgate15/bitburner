@@ -11,6 +11,8 @@ export async function main(ns: NS) {
     throw new Error('Please provide a target server as an argument');
   }
 
+  ns.print(`Starting preparation for ${target}...`);
+
   await prep(ns, target);
 
   ns.print(`Preparation completed for ${target}. Starting batch execution...`);

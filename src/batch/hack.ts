@@ -17,5 +17,6 @@ export async function main(ns: NS) {
     });
   }
 
+  ns.print(new Date().toLocaleString() + ` - Starting grow on ${target} with delay of ${delay}ms`);
   await ns.hack(target, { additionalMsec: delay });
 }
