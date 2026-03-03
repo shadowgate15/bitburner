@@ -13,7 +13,7 @@ export async function runBatch(ns: NS, target: string) {
   const weakenTime = ns.getWeakenTime(target);
   const hackTime = ns.getHackTime(target);
 
-  const hackMoney = maxMoney * 0.9;
+  const hackMoney = maxMoney * 0.5;
   const hackThreads = Math.floor(ns.hackAnalyzeThreads(target, hackMoney));
   const hackDelay = weakenTime - hackTime - DELAY;
   const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackThreads, target);

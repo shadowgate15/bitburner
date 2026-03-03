@@ -48,6 +48,9 @@ export async function main(ns: NS) {
             }
           }
         }
+
+        cheapestUpgrade = null;
+        cheapestUpgradeCost = Infinity;
       }
     }
 

@@ -11,11 +11,42 @@ export class ServerList {
     return new ServerList(ns).getServerList();
   }
 
+  static getAll(ns: NS): string[] {
+    return new ServerList(ns).getAllServers();
+  }
+
   constructor(private readonly ns: NS) {
     // Add purchased servers to the list of servers to hack, since we know we can hack them
     for (const server of this.ns.getPurchasedServers()) {
       this.servers.add(server);
     }
+  }
+
+  getAllServers(): string[] {
+    const visited = new Set<string>();
+
+    const serversToVisit = this.ns.scan('home');
+    let server: string | undefined = serversToVisit.pop();
+
+    while (server) {
+      if (visited.has(server)) {
+        server = serversToVisit.pop();
+        continue;
+      }
+
+      this.servers.add(server);
+
+      serversToVisit.push(...this.ns.scan(server));
+
+      visited.add(server);
+
+      server = serversToVisit.pop();
+    }
+
+    // Remote "home" from the list of servers, since we don't want to run hacks on our own server
+    this.servers.delete('home');
+
+    return Array.from(this.servers.values());
   }
 
   getServerList(): string[] {

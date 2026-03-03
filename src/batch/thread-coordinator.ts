@@ -12,7 +12,7 @@ export class ThreadCoordinator {
     const servers = ServerList.get(this.ns);
 
     if (normalizeFlags(this.ns).home) {
-      servers.push('home');
+      servers.unshift('home');
     }
 
     return servers;
