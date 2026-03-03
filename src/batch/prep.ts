@@ -11,8 +11,8 @@ export async function prep(ns: NS, target: string) {
     const currentMoney = ns.getServerMoneyAvailable(target);
 
     const growMultiplier = currentMoney > 0 ? maxMoney / currentMoney : maxMoney;
-    const growThreads = Math.ceil(ns.growthAnalyze(target, growMultiplier));
-    const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target);
+    let growThreads = Math.ceil(ns.growthAnalyze(target, growMultiplier));
+    const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads);
 
     const currentSecurity = ns.getServerSecurityLevel(target);
     const securityToReduce = currentSecurity - minSecurity;
@@ -35,18 +35,26 @@ export async function prep(ns: NS, target: string) {
 
       return i;
     })();
-    const weakenThreads = weakenThreadsForGrow + weakenThreadsForCatchup;
+    let weakenThreads = weakenThreadsForGrow + weakenThreadsForCatchup;
 
     const growPortNumber = Date.now();
     const weakenPortNumber = Date.now() + 1;
 
     try {
-      threadCoordinator.addGrowThreads(target, growThreads, 0, growPortNumber);
       threadCoordinator.addWeakenThreads(target, weakenThreads, 0, weakenPortNumber);
     } catch (e) {
-      if (!(e instanceof NotEnoughRamError)) {
-        throw e;
-      }
+      // If theree is not enough RAM to add weaken threads,
+      // then we doen't want to wait on the weaken threads
+      if (e instanceof NotEnoughRamError) weakenThreads = 0;
+      else throw e;
+    }
+    try {
+      threadCoordinator.addGrowThreads(target, growThreads, 0, growPortNumber);
+    } catch (e) {
+      // If theree is not enough RAM to add grow threads,
+      // then we doen't want to wait on the grow threads
+      if (e instanceof NotEnoughRamError) growThreads = 0;
+      else throw e;
     }
 
     await Promise.all([
