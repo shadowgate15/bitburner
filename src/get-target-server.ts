@@ -5,5 +5,7 @@ import { ServerList } from './deploy/server-list';
 export async function main(ns: NS) {
   const servers = ServerList.get(ns);
 
-  ns.tprint(serversWithScoreAbove(ns, servers));
+  for (const [server, score] of serversWithScoreAbove(ns, servers).reverse()) {
+    ns.tprint(`${server}: ${score.toFixed(2)}`);
+  }
 }
