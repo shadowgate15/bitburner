@@ -10,6 +10,8 @@ export async function main(ns: NS) {
     throw new Error('Please provide a target server as an argument');
   }
 
+  ns.ui.openTail();
+
   while (true) {
     ns.clearLog();
     ns.print(`Monitoring server: ${target}`);
