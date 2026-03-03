@@ -13,11 +13,6 @@ export async function main(ns: NS) {
 
   await prep(ns, target);
 
-  ns.tprint(`minSecurity: ${ns.getServerMinSecurityLevel(target)}`);
-  ns.tprint(`currentSecurity: ${ns.getServerSecurityLevel(target)}`);
-  ns.tprint(`maxMoney: ${ns.getServerMaxMoney(target)}`);
-  ns.tprint(`currentMoney: ${ns.getServerMoneyAvailable(target)}`);
-  ns.tprint(`Preparation completed for ${target}. Starting batch execution...`);
   ns.print(`Preparation completed for ${target}. Starting batch execution...`);
 
   while (true) {

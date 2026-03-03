@@ -1,7 +1,7 @@
 import { NS } from '@ns';
 import { ThreadCoordinator } from './thread-coordinator';
 
-const DELAY = 20;
+const DELAY = 5;
 
 export async function runBatch(ns: NS, target: string) {
   const threadCoordinator = new ThreadCoordinator(ns);
@@ -13,7 +13,7 @@ export async function runBatch(ns: NS, target: string) {
   const weakenTime = ns.getWeakenTime(target);
   const hackTime = ns.getHackTime(target);
 
-  const hackMoney = maxMoney * 0.1;
+  const hackMoney = maxMoney * 0.3;
   const hackThreads = Math.floor(ns.hackAnalyzeThreads(target, hackMoney));
   const hackDelay = weakenTime - hackTime - DELAY;
   const hackSecurityIncrease = ns.hackAnalyzeSecurity(hackThreads, target);
@@ -21,7 +21,9 @@ export async function runBatch(ns: NS, target: string) {
   const growMultiplier = hackMoney > 0 ? maxMoney / (maxMoney - hackMoney) : maxMoney;
   const growThreads = Math.ceil(ns.growthAnalyze(target, growMultiplier));
   const growDelay = weakenTime - growTime + DELAY;
-  const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads, target) * 1.1; // Slightly increase the security increase to make sure the weaken threads are enough
+  // Don't provide target because the target is fully grown,
+  // so the security increase would be 0.
+  const growSecurityIncrease = ns.growthAnalyzeSecurity(growThreads);
 
   const weakenHackThreads = (() => {
     let i = 1;
@@ -30,7 +32,8 @@ export async function runBatch(ns: NS, target: string) {
       i++;
     }
 
-    return i;
+    // Adding an extra thread to make sure we reduce the security level enough, since weakenAnalyze only gives an estimate
+    return ++i;
   })();
   const weakenGrowThreads = (() => {
     let i = 1;
@@ -39,7 +42,8 @@ export async function runBatch(ns: NS, target: string) {
       i++;
     }
 
-    return i;
+    // Adding an extra thread to make sure we reduce the security level enough, since weakenAnalyze only gives an estimate
+    return ++i;
   })();
 
   threadCoordinator.addHackThreads(target, hackThreads, hackDelay);
