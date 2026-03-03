@@ -1,6 +1,7 @@
 import { nuke } from '@/deploy/nuke';
 import { ServerList } from '@/deploy/server-list';
 import { NS } from '@ns';
+import { normalizeFlags } from './normalize-flags';
 
 const GROW_SCRIPT = 'batch/grow.js';
 const WEAKEN_SCRIPT = 'batch/weaken.js';
@@ -8,7 +9,13 @@ const HACK_SCRIPT = 'batch/hack.js';
 
 export class ThreadCoordinator {
   private get servers() {
-    return ServerList.get(this.ns);
+    const servers = ServerList.get(this.ns);
+
+    if (normalizeFlags(this.ns).home) {
+      servers.push('home');
+    }
+
+    return servers;
   }
 
   constructor(private readonly ns: NS) {}
@@ -25,16 +32,13 @@ export class ThreadCoordinator {
   ): number {
     const scriptRam = this.ns.getScriptRam(script);
 
-    const server = this.servers.find((s) => this.ns.getServerMaxRam(s) - this.ns.getServerUsedRam(s) > scriptRam);
+    const server = this.servers.find((s) => this.getAvailableRam(s) > scriptRam);
 
     if (!server) {
       return -1;
     }
 
-    const threadsToAdd = Math.min(
-      threads,
-      Math.floor((this.ns.getServerMaxRam(server) - this.ns.getServerUsedRam(server)) / scriptRam),
-    );
+    const threadsToAdd = Math.min(threads, Math.floor(this.getAvailableRam(server) / scriptRam));
 
     this.ns.scp(script, server);
 
@@ -70,6 +74,16 @@ export class ThreadCoordinator {
   readonly addGrowThreads = this._makeAddThreadsFunction(GROW_SCRIPT);
   readonly addWeakenThreads = this._makeAddThreadsFunction(WEAKEN_SCRIPT);
   readonly addHackThreads = this._makeAddThreadsFunction(HACK_SCRIPT);
+
+  private getAvailableRam(server: string) {
+    let maxRam = this.ns.getServerMaxRam(server);
+
+    if (server === 'home') {
+      maxRam = maxRam * 0.75; // Keep some RAM free on home server to avoid freezing
+    }
+
+    return maxRam - this.ns.getServerUsedRam(server);
+  }
 }
 
 export class NotEnoughRamError extends Error {
